@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Square Wave</title>
+    <style type="text/css" rel="stylesheet">
+        body {
+            font-family: "Helvetica", "Arial", sans-serif;
+        }
+
+        #demo {
+            width: 50%;
+            min-width: 400px;
+            margin: 0 auto;
+        }
+
+        #frequency {
+            width: 60%;
+        }
+    </style>
+</head>
+<body>
+    <section id="demo">
+        <h1>Square Wave Demo</h1>
+        <h3>by Patrick Stoica</h3>
+        <section id="volumeControls">
+            <input id="volume" name="volume" type="range" min="0" max="1" step="0.01" value="0.5" />
+            <label for="volume">Volume</label>
+            <input id="mute" name="mute" type="checkbox" />
+        <label for="mute">Mute</label>
+        <section id="frequencyControls">
+            <input id="frequency" name="frequency" type="range" min="0" max="22000" value="440" step="1" />
+            <span id="frequencyDisplay">440 Hz</span>
+        </section>
+    </section>
+
+    <script type="text/javascript">
+        const harmonics = 30;
+
+        var context = new webkitAudioContext(),
+            gainNode = context.createGainNode(),
+            gainNodes = new Array(),
+            oscillators = new Array(),
+            harmonic = 1,
+            previousVolume = 0.5;
+
+        gainNode.gain.value = 0.5;
+
+        for (var i = 0; i <= harmonics; i++) {
+            gainNodes[i] = context.createGainNode();
+            oscillators[i] = context.createOscillator();
+
+            oscillators[i].type = 0;
+            oscillators[i].frequency.value = 440 * harmonic;
+            oscillators[i].connect(gainNodes[i]);
+            oscillators[i].noteOn(0);
+
+            gainNodes[i].gain.value = 1 / harmonic;
+            gainNodes[i].connect(gainNode);
+
+            harmonic += 2;
+        }
+
+        gainNode.connect(context.destination);
+
+        document.getElementById('volume').addEventListener('change', function() {
+            gainNode.gain.value = previousVolume = this.value;
+        });
+
+        document.getElementById('mute').addEventListener('click', function() {
+            if (this.checked) {
+                gainNode.gain.value = 0;
+                document.getElementById('volume').disabled = true;
+            } else {
+                gainNode.gain.value = previousVolume;
+                document.getElementById('volume').disabled = false;
+            }
+        });
+
+        document.getElementById('frequency').addEventListener('change', function() {
+            var harmonic = 1;
+            for (var i = 0; i <= harmonics; i++) {
+                oscillators[i].frequency.value = this.value * harmonic;
+                harmonic += 2;
+            }
+
+            document.getElementById('frequencyDisplay').innerHTML = this.value + " Hz";
+        });
+    </script>
+</body>
+</html>
